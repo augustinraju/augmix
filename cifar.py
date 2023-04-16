@@ -37,6 +37,7 @@ from third_party.WideResNet_pytorch.wideresnet import WideResNet
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+import torchvision.models as models
 from torchvision import datasets
 from torchvision import transforms
 
@@ -54,7 +55,7 @@ parser.add_argument(
     '-m',
     type=str,
     default='wrn',
-    choices=['wrn', 'allconv', 'densenet', 'resnext'],
+    choices=['wrn', 'allconv', 'densenet', 'resnext','resnet18','convnexttiny'],
     help='Choose architecture.')
 # Optimization options
 parser.add_argument(
@@ -121,6 +122,7 @@ parser.add_argument(
     default='',
     help='Checkpoint path for resume / test.')
 parser.add_argument('--evaluate', action='store_true', help='Eval only.')
+parser.add_argument('--pre', action='store_true', help='testing only.')
 parser.add_argument(
     '--print-freq',
     type=int,
@@ -329,7 +331,7 @@ def main():
       num_workers=args.num_workers,
       pin_memory=True)
 
-  # Create model
+  #Create model
   if args.model == 'densenet':
     net = densenet(num_classes=num_classes)
   elif args.model == 'wrn':
@@ -338,6 +340,18 @@ def main():
     net = AllConvNet(num_classes)
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
+  elif args.model == 'resnet18':
+    if args.pre:
+      net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
+    else:
+      net = models.resnet18()
+    net.fc = torch.nn.Linear(512,num_classes)
+  elif args.model == 'convnexttiny':
+    if args.pre:
+      net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+    else:
+      net = models.convnext_tiny()
+    net.fc = torch.nn.Linear(512,num_classes)
 
   optimizer = torch.optim.SGD(
       net.parameters(),
