@@ -37,9 +37,11 @@ from third_party.WideResNet_pytorch.wideresnet import WideResNet
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
-import torchvision.models as models
+#import torchvision.models as models
+import timm
 from torchvision import datasets
 from torchvision import transforms
+import ipdb
 
 parser = argparse.ArgumentParser(
     description='Trains a CIFAR Classifier',
@@ -291,7 +293,7 @@ def test_c(net, test_data, base_path):
 def main():
   torch.manual_seed(1)
   np.random.seed(1)
-
+  
   # Load datasets
   train_transform = transforms.Compose(
       [transforms.RandomHorizontalFlip(),
@@ -341,16 +343,21 @@ def main():
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
   elif args.model == 'resnet18':
+    #ipdb.set_trace()
     if args.pre:
-      net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
+      #net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
+      net = timm.create_model("resnet18",pretrained=True)
     else:
-      net = models.resnet18()
+      #net = models.resnet18()
+      net = timm.create_model("resnet18",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
   elif args.model == 'convnexttiny':
     if args.pre:
-      net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+      #net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+      net = timm.create_model("convnext_tiny",pretrained=True)
     else:
-      net = models.convnext_tiny()
+      #net = models.convnext_tiny()
+      net = timm.create_model("convnext_tiny",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
 
   optimizer = torch.optim.SGD(
