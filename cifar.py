@@ -42,6 +42,11 @@ import timm
 from torchvision import datasets
 from torchvision import transforms
 import ipdb
+import tensorboardX
+from tensorboardX import SummaryWriter
+
+log_dir = 'logs/'
+writer = SummaryWriter(log_dir=log_dir)
 
 parser = argparse.ArgumentParser(
     description='Trains a CIFAR Classifier',
@@ -418,6 +423,9 @@ def main():
     train_loss_ema = train(net, train_loader, optimizer, scheduler)
     test_loss, test_acc = test(net, test_loader)
 
+    writer.add_scalar('Train/Loss', train_loss_ema, global_step=epoch)
+    writer.add_scalar('Test/Accuracy', test_acc, global_step=epoch)
+
     is_best = test_acc > best_acc
     best_acc = max(test_acc, best_acc)
     checkpoint = {
@@ -455,6 +463,7 @@ def main():
   with open(log_path, 'a') as f:
     f.write('%03d,%05d,%0.6f,%0.5f,%0.2f\n' %
             (args.epochs + 1, 0, 0, 0, 100 - 100 * test_c_acc))
+writer.close()
 
 
 if __name__ == '__main__':
