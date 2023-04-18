@@ -46,7 +46,7 @@ import datetime
 import tensorboardX
 from tensorboardX import SummaryWriter
 
-rm -rf ./logs/
+os.rmdir("/logs")
 log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 writer = SummaryWriter(log_dir=log_dir)
 
