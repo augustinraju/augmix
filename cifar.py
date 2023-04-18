@@ -42,10 +42,12 @@ import timm
 from torchvision import datasets
 from torchvision import transforms
 import ipdb
+import datetime
 import tensorboardX
 from tensorboardX import SummaryWriter
 
-log_dir = 'logs/'
+rm -rf ./logs/
+log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 writer = SummaryWriter(log_dir=log_dir)
 
 parser = argparse.ArgumentParser(
