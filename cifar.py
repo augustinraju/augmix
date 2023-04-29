@@ -414,7 +414,7 @@ def main():
     return
 
   if args.scheduler == 'cosineannealing':
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=32)
   elif args.scheduler == 'lamdalearn':
     scheduler = torch.optim.lr_scheduler.LambdaLR(
       optimizer,
