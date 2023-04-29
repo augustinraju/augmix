@@ -350,13 +350,18 @@ def main():
   #Create model
   if args.model == 'densenet':
     net = densenet(num_classes=num_classes)
+    print('densenet')
   elif args.model == 'wrn':
     net = WideResNet(args.layers, num_classes, args.widen_factor, args.droprate)
+    print('wrn')
   elif args.model == 'allconv':
     net = AllConvNet(num_classes)
+    print('allconv')
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
+    print('resnext')
   elif args.model == 'resnet18':
+    print('resnet18')
     #ipdb.set_trace()
     if args.pre:
       #net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
@@ -366,6 +371,7 @@ def main():
       net = timm.create_model("resnet18",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
   elif args.model == 'convnexttiny':
+    print('convnexttiny')
     if args.pre:
       #net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
       net = timm.create_model("convnext_tiny",pretrained=True)
@@ -375,6 +381,7 @@ def main():
     net.fc = torch.nn.Linear(512,num_classes)
 
   if args.optim == 'SGD':
+    print('SGD')
     optimizer = torch.optim.SGD(
         net.parameters(),
         args.learning_rate,
@@ -382,6 +389,7 @@ def main():
         weight_decay=args.decay,
         nesterov=True)
   elif args.optim == 'adamw':
+    print('adamw')
     optimizer = torch.optim.AdamW(
         net.parameters(),
         args.learning_rate,
@@ -413,8 +421,10 @@ def main():
     return
 
   if args.scheduler == 'cosineannealing':
+    print('cosineannealing')
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=32)
   elif args.scheduler == 'lamdalearn':
+    print('lamdalearn')
     scheduler = torch.optim.lr_scheduler.LambdaLR(
       optimizer,
       lr_lambda=lambda step: get_lr(  # pylint: disable=g-long-lambda
