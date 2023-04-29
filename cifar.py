@@ -24,7 +24,6 @@ from __future__ import print_function
 ##
 import argparse
 import os
-import shutil
 import time
 
 import augmentations
@@ -46,7 +45,6 @@ import datetime
 import tensorboardX
 from tensorboardX import SummaryWriter
 
-shutil.rmtree("./logs")
 log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 writer = SummaryWriter(log_dir=log_dir)
 
