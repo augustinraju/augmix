@@ -46,7 +46,7 @@ import datetime
 import tensorboardX
 from tensorboardX import SummaryWriter
 
-os.rmdir("/logs")
+shutil.rmtree("./logs")
 log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 writer = SummaryWriter(log_dir=log_dir)
 
@@ -132,6 +132,14 @@ parser.add_argument(
     help='Checkpoint path for resume / test.')
 parser.add_argument('--evaluate', action='store_true', help='Eval only.')
 parser.add_argument('--pre', action='store_true', help='testing only.')
+parser.add_argument('--optim',
+                     type=str,
+                     default='SGD',
+                     choices=['SGD', 'cosineannealing'])
+parser.add_argument('--scheduler',
+                     type=str,
+                     default='lamdalearn',
+                     choices=['lamdalearn', 'adamw'])
 parser.add_argument(
     '--print-freq',
     type=int,
@@ -367,12 +375,18 @@ def main():
       net = timm.create_model("convnext_tiny",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
 
-  optimizer = torch.optim.SGD(
-      net.parameters(),
-      args.learning_rate,
-      momentum=args.momentum,
-      weight_decay=args.decay,
-      nesterov=True)
+  if args.optim == 'SGD'
+    optimizer = torch.optim.SGD(
+        net.parameters(),
+        args.learning_rate,
+        momentum=args.momentum,
+        weight_decay=args.decay,
+        nesterov=True)
+  elif args.optim == 'adamw'
+    optimizer = torch.optim.AdamW(
+        net.parameters(),
+        args.learning_rate,
+        weight_decay=args.decay)
 
   # Distribute model across all visible GPUs
   net = torch.nn.DataParallel(net).cuda()
@@ -399,13 +413,17 @@ def main():
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
 
-  scheduler = torch.optim.lr_scheduler.LambdaLR(
+  if args.scheduler == 'cosineannealing'
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer)
+  elif args.scheduler == 'lamdalearn'
+    scheduler = torch.optim.lr_scheduler.LambdaLR(
       optimizer,
       lr_lambda=lambda step: get_lr(  # pylint: disable=g-long-lambda
           step,
           args.epochs * len(train_loader),
           1,  # lr_lambda computes multiplicative factor
           1e-6 / args.learning_rate))
+  
 
   if not os.path.exists(args.save):
     os.makedirs(args.save)
@@ -426,6 +444,7 @@ def main():
     test_loss, test_acc = test(net, test_loader)
 
     writer.add_scalar('Train/Loss', train_loss_ema, global_step=epoch)
+    writer.add_scalar('Test/Loss', test_loss, global_step=epoch)
     writer.add_scalar('Test/Accuracy', test_acc, global_step=epoch)
 
     is_best = test_acc > best_acc
