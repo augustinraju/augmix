@@ -135,11 +135,11 @@ parser.add_argument('--pre', action='store_true', help='testing only.')
 parser.add_argument('--optim',
                      type=str,
                      default='SGD',
-                     choices=['SGD', 'cosineannealing'])
+                     choices=['SGD','adamw'])
 parser.add_argument('--scheduler',
                      type=str,
                      default='lamdalearn',
-                     choices=['lamdalearn', 'adamw'])
+                     choices=['lamdalearn','cosineannealing'])
 parser.add_argument(
     '--print-freq',
     type=int,
