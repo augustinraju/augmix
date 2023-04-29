@@ -375,14 +375,14 @@ def main():
       net = timm.create_model("convnext_tiny",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
 
-  if args.optim == 'SGD'
+  if args.optim == 'SGD':
     optimizer = torch.optim.SGD(
         net.parameters(),
         args.learning_rate,
         momentum=args.momentum,
         weight_decay=args.decay,
         nesterov=True)
-  elif args.optim == 'adamw'
+  elif args.optim == 'adamw':
     optimizer = torch.optim.AdamW(
         net.parameters(),
         args.learning_rate,
@@ -413,9 +413,9 @@ def main():
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
 
-  if args.scheduler == 'cosineannealing'
+  if args.scheduler == 'cosineannealing':
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer)
-  elif args.scheduler == 'lamdalearn'
+  elif args.scheduler == 'lamdalearn':
     scheduler = torch.optim.lr_scheduler.LambdaLR(
       optimizer,
       lr_lambda=lambda step: get_lr(  # pylint: disable=g-long-lambda
