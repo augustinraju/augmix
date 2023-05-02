@@ -160,6 +160,12 @@ CORRUPTIONS = [
     'jpeg_compression'
 ]
 
+CORRUPTIONSP = [
+    'gaussian_noise', 'gaussian_noise_2','gaussian_noise_3', 'shot_noise', 'shot_noise_2', 'shot_noise_3',
+    'gaussian_blur', 'snow', 'brightness', 'motion_blur', 'rotate', 'scale', 'shear', 'spatter', 'speckle_noise',
+    'speckle_noise_2', 'speckle_noise_3', 'tilt', 'translate','zoom_blur'
+]
+
 
 def get_lr(step, total_steps, lr_max, lr_min):
   """Compute learning rate according to cosine annealing schedule."""
@@ -303,6 +309,28 @@ def test_c(net, test_data, base_path):
 
   return np.mean(corruption_accs)
 
+def test_p(net, test_data, base_path):
+  """Evaluate network on given corrupted dataset."""
+  corruption_accs = []
+  for corruption in CORRUPTIONSP:
+    # Reference to original data is mutated
+    test_data.data = np.load(base_path + corruption + '.npy')
+    test_data.targets = torch.LongTensor(np.load(base_path + 'labels.npy'))
+
+    test_loader = torch.utils.data.DataLoader(
+        test_data,
+        batch_size=args.eval_batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+        pin_memory=True)
+
+    test_loss, test_acc = test(net, test_loader)
+    corruption_accs.append(test_acc)
+    print('Pertubation {}\n\tTest Loss {:.3f} | Test Error {:.3f}'.format(
+        corruption, test_loss, 100 - 100. * test_acc))
+
+  return np.mean(corruption_accs)
+
 
 def main():
   torch.manual_seed(1)
@@ -419,6 +447,9 @@ def main():
     test_c_acc = test_c(net, test_data, base_c_path)
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
+    test_p_acc = test_p(net, test_data, base_c_path)
+    print('Pertubations Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
+    return
 
   if args.scheduler == 'cosineannealing':
     print('cosineannealing')
@@ -489,6 +520,10 @@ def main():
 
   test_c_acc = test_c(net, test_data, base_c_path)
   print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
+
+  test_p_acc = test_p(net, test_data, base_c_path)
+  print('Pertubations Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
+  return
 
   with open(log_path, 'a') as f:
     f.write('%03d,%05d,%0.6f,%0.5f,%0.2f\n' %
