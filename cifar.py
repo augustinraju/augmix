@@ -351,6 +351,7 @@ def main():
     test_data = datasets.CIFAR10(
         './data/cifar', train=False, transform=test_transform, download=True)
     base_c_path = './data/cifar/CIFAR-10-C/'
+    base_p_path = './data/cifar/CIFAR-10-P/'
     num_classes = 10
   else:
     train_data = datasets.CIFAR100(
@@ -358,6 +359,7 @@ def main():
     test_data = datasets.CIFAR100(
         './data/cifar', train=False, transform=test_transform, download=True)
     base_c_path = './data/cifar/CIFAR-100-C/'
+    base_p_path = './data/cifar/CIFAR-10-P/'
     num_classes = 100
 
   train_data = AugMixDataset(train_data, preprocess, args.no_jsd)
@@ -447,7 +449,7 @@ def main():
     test_c_acc = test_c(net, test_data, base_c_path)
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
-    test_p_acc = test_p(net, test_data, base_c_path)
+    test_p_acc = test_p(net, test_data, base_p_path)
     print('Pertubations Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
 
@@ -521,7 +523,7 @@ def main():
   test_c_acc = test_c(net, test_data, base_c_path)
   print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
 
-  test_p_acc = test_p(net, test_data, base_c_path)
+  test_p_acc = test_p(net, test_data, base_p_path)
   print('Pertubations Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
   return
 
