@@ -129,8 +129,8 @@ parser.add_argument(
     type=str,
     default='',
     help='Checkpoint path for resume / test.')
-parser.add_argument('--evaluate', action='store_true', help='Eval only.')
-parser.add_argument('--pre', action='store_true', help='testing only.')
+parser.add_argument('--evaluate',default=False, action='store_true', help='Eval only.')
+parser.add_argument('--pre', default=False, action='store_true', help='testing only.')
 parser.add_argument('--optim',
                      type=str,
                      default='SGD',
