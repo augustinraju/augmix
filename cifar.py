@@ -408,7 +408,7 @@ def main():
     else:
       #net = models.convnext_tiny()
       net = timm.create_model("convnext_tiny",pretrained=False)
-    net.fc = torch.nn.Linear(512,num_classes)
+    net.head.fc = torch.nn.Linear(768,num_classes)
 
   if args.optim == 'SGD':
     print('SGD')
