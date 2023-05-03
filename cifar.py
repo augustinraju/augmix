@@ -165,6 +165,8 @@ CORRUPTIONSP = [
     'speckle_noise_2', 'speckle_noise_3', 'tilt', 'translate','zoom_blur'
 ]
 
+log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'_'+args.model+'_'+args.optim
+writer = SummaryWriter(log_dir=log_dir)
 
 def get_lr(step, total_steps, lr_max, lr_min):
   """Compute learning rate according to cosine annealing schedule."""
@@ -473,8 +475,8 @@ def main():
           1,  # lr_lambda computes multiplicative factor
           1e-6 / args.learning_rate))
 
-  log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'_'+netname+'_'+optimname
-  writer = SummaryWriter(log_dir=log_dir)
+
+
 
 
   if not os.path.exists(args.save):
