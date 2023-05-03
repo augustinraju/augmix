@@ -46,8 +46,7 @@ import datetime
 import tensorboardX
 from tensorboardX import SummaryWriter
 
-log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-writer = SummaryWriter(log_dir=log_dir)
+
 
 parser = argparse.ArgumentParser(
     description='Trains a CIFAR Classifier',
@@ -381,17 +380,22 @@ def main():
   if args.model == 'densenet':
     net = densenet(num_classes=num_classes)
     print('densenet')
+    netname = 'densenet'
   elif args.model == 'wrn':
     net = WideResNet(args.layers, num_classes, args.widen_factor, args.droprate)
     print('wrn')
+    netname = 'wrn'
   elif args.model == 'allconv':
     net = AllConvNet(num_classes)
     print('allconv')
+    netname = 'allconv'
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
     print('resnext')
+    netname = 'resnext'
   elif args.model == 'resnet18':
     print('resnet18')
+    netname = 'resnet18'
     #ipdb.set_trace()
     if args.pre:
       #net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
@@ -402,6 +406,7 @@ def main():
     net.fc = torch.nn.Linear(512,num_classes)
   elif args.model == 'convnexttiny':
     print('convnexttiny')
+    netname = 'convnexttiny'
     if args.pre:
       #net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
       net = timm.create_model("convnext_tiny",pretrained=True)
@@ -412,6 +417,7 @@ def main():
 
   if args.optim == 'SGD':
     print('SGD')
+    optimname = 'SGD'
     optimizer = torch.optim.SGD(
         net.parameters(),
         args.learning_rate,
@@ -420,6 +426,7 @@ def main():
         nesterov=True)
   elif args.optim == 'adamw':
     print('adamw')
+    optimname = 'adamw'
     optimizer = torch.optim.AdamW(
         net.parameters(),
         args.learning_rate,
@@ -465,7 +472,10 @@ def main():
           args.epochs * len(train_loader),
           1,  # lr_lambda computes multiplicative factor
           1e-6 / args.learning_rate))
-  
+
+  log_dir = 'logs/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'_'+netname+'_'+optimname
+  writer = SummaryWriter(log_dir=log_dir)
+
 
   if not os.path.exists(args.save):
     os.makedirs(args.save)
@@ -500,10 +510,10 @@ def main():
         'optimizer': optimizer.state_dict(),
     }
 
-    save_path = os.path.join(args.save, 'checkpoint.pth.tar')
+    save_path = os.path.join(args.save,args.model+'_'+args.optim, 'checkpoint.pth.tar')
     torch.save(checkpoint, save_path)
     if is_best:
-      shutil.copyfile(save_path, os.path.join(args.save, 'model_best.pth.tar'))
+      shutil.copyfile(save_path, os.path.join(args.save, args.model+'_'+args.optim,'model_best.pth.tar'))
 
     with open(log_path, 'a') as f:
       f.write('%03d,%05d,%0.6f,%0.5f,%0.2f\n' % (

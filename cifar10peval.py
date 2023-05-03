@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='Trains a CIFAR Classifier',
 parser.add_argument('--dataset', '-d', type=str, default='cifar10', choices=['cifar10', 'cifar100'],
                     help='Choose between CIFAR-10, CIFAR-100.')
 parser.add_argument('--model', '-m', type=str, default='resnext',
-                    choices=['wrn', 'allconv', 'densenet', 'resnext'], help='Choose architecture.')
+                    choices=['wrn', 'allconv', 'densenet', 'resnext','resnet18','convnexttiny'], help='Choose architecture.')
 # Optimization options
 parser.add_argument('--epochs', '-e', type=int, default=100, help='Number of epochs to train.')
 parser.add_argument('--learning_rate', '-lr', type=float, default=0.1, help='The initial learning rate.')
@@ -43,7 +43,7 @@ parser.add_argument('--widen-factor', default=2, type=int, help='widen factor')
 parser.add_argument('--droprate', default=0.0, type=float, help='dropout probability')
 # Checkpoints
 parser.add_argument('--save', '-s', type=str, default='./snapshots/adv', help='Folder to save checkpoints.')
-parser.add_argument('--load', '-l', type=str, default='./snapshots/augmix', help='Checkpoint path to resume / test.')
+parser.add_argument('--resume', '-r', type=str, default='', help='Checkpoint path for resume / test.')
 parser.add_argument('--test', '-t', action='store_true', help='Test only flag.')
 
 parser.add_argument('--evaluate',default=False, action='store_true', help='Eval only.')
@@ -101,7 +101,7 @@ if args.model == 'densenet':
     net = densenet(num_classes=num_classes)
     print('densenet')
 elif args.model == 'wrn':
-    net = WideResNet(args.layers, num_classes, args.widen_factor, dropRate=args.droprate)
+    net = WideResNet(args.layers, num_classes, args.widen_factor, args.droprate)
     print('wrn')
 elif args.model == 'allconv':
     net = AllConvNet(num_classes)
@@ -135,34 +135,45 @@ print(state)
 
 start_epoch = 0
 
+net = torch.nn.DataParallel(net).cuda()
+cudnn.benchmark = True
 # Restore model if desired
-if args.load != '':
-    for i in range(1000 - 1, -1, -1):
-        model_name = os.path.join(args.load, args.dataset + '_' + args.model +
-                                  '_baseline_epoch_' + str(i) + '.pt')
-        if os.path.isfile(model_name):
-            net.load_state_dict(torch.load(model_name))
-            print('Model restored! Epoch:', i)
-            start_epoch = i + 1
-            break
-        model_name = os.path.join(args.load, args.dataset + '_' + args.model + '_' + args.model +
-                                  '_baseline_epoch_' + str(i) + '.pt')
-        if os.path.isfile(model_name):
-            net.load_state_dict(torch.load(model_name))
-            print('Model restored! Epoch:', i)
-            start_epoch = i + 1
-            break
-    if start_epoch == 0:
-        assert False, "could not resume"
+if args.resume:
+    if os.path.isfile(args.resume):
+      checkpoint = torch.load(args.resume)
+      start_epoch = checkpoint['epoch'] + 1
+      best_acc = checkpoint['best_acc']
+      net.load_state_dict(checkpoint['state_dict'])
+      print('Model restored from epoch:', start_epoch)
 
-if args.ngpu > 1:
-    net = torch.nn.DataParallel(net, device_ids=list(range(args.ngpu)))
+# # Restore model if desired
+# if args.load != '':
+#     for i in range(1000 - 1, -1, -1):
+#         model_name = os.path.join(args.load, args.dataset + '_' + args.model +
+#                                   '_baseline_epoch_' + str(i) + '.pt')
+#         if os.path.isfile(model_name):
+#             net.load_state_dict(torch.load(model_name))
+#             print('Model restored! Epoch:', i)
+#             start_epoch = i + 1
+#             break
+#         model_name = os.path.join(args.load, args.dataset + '_' + args.model + '_' + args.model +
+#                                   '_baseline_epoch_' + str(i) + '.pt')
+#         if os.path.isfile(model_name):
+#             net.load_state_dict(torch.load(model_name))
+#             print('Model restored! Epoch:', i)
+#             start_epoch = i + 1
+#             break
+#     if start_epoch == 0:
+#         assert False, "could not resume"
 
-if args.ngpu > 0:
-    net.cuda()
-    torch.cuda.manual_seed(1)
+# if args.ngpu > 1:
+#     net = torch.nn.DataParallel(net, device_ids=list(range(args.ngpu)))
 
-cudnn.benchmark = True  # fire on all cylinders
+# if args.ngpu > 0:
+#     net.cuda()
+#     torch.cuda.manual_seed(1)
+
+# cudnn.benchmark = True  # fire on all cylinders
 
 net.eval()
 
@@ -193,7 +204,7 @@ def evaluate(loader):
 
 acc, test_confidence, test_correct = evaluate(test_loader)
 print('Error', 100 - 100. * acc)
-print('RMS', 100 * calib_err(test_confidence, test_correct, p='2'))
+#print('RMS', 100 * calib_err(test_confidence, test_correct, p='2'))
 # print('AURRA', 100 * aurra(test_confidence, test_correct))
 
 # /////////////// Stability Measurements ///////////////
@@ -259,7 +270,7 @@ from tqdm import tqdm
 from scipy.stats import rankdata
 
 c_p_dir =  'CIFAR-10-P' if num_classes == 10 else 'CIFAR-100-P'
-c_p_dir = '/home/hendrycks/datasets/' + c_p_dir
+c_p_dir = '/work/ws-tmp/g058873-cifarjob/augmix/data/cifar/' + c_p_dir
 
 
 dummy_targets = torch.LongTensor(np.random.randint(0, num_classes, (10000,)))
@@ -302,9 +313,9 @@ for p in ['gaussian_noise', 'shot_noise', 'motion_blur', 'zoom_blur',
 
         print('\n' + p, 'Flipping Prob')
         print(current_flip)
-        # print('Top5 Distance\t{:.5f}'.format(ranking_dist(ranks, True if 'noise' in p else False, mode='top5')))
-        # print('Zipf Distance\t{:.5f}'.format(current_zipf))
+        print('Top5 Distance\t{:.5f}'.format(ranking_dist(ranks, True if 'noise' in p else False, mode='top5')))
+        print('Zipf Distance\t{:.5f}'.format(current_zipf))
 
 print(flip_list)
 print('\nMean Flipping Prob\t{:.5f}'.format(np.mean(flip_list)))
-# print('Mean Zipf Distance\t{:.5f}'.format(np.mean(zipf_list)))
+print('Mean Zipf Distance\t{:.5f}'.format(np.mean(zipf_list)))
