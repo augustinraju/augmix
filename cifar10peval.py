@@ -11,10 +11,10 @@ import torchvision.transforms as trn
 import torchvision.datasets as dset
 import torch.nn.functional as F
 from tqdm import tqdm
-from models.wrn import WideResNet
-from models.resnext import resnext29
-from models.densenet import densenet
-from models.allconv import AllConvNet
+from third_party.WideResNet_pytorch.wideresnet import WideResNet
+from third_party.ResNeXt_DenseNet.models.resnext import resnext29
+from third_party.ResNeXt_DenseNet.models.densenet import densenet
+from models.cifar.allconv import AllConvNet
 
 # import datetime
 # import tensorboardX
@@ -78,12 +78,12 @@ train_transform = trn.Compose([trn.RandomHorizontalFlip(), trn.RandomCrop(32, pa
 test_transform = trn.Compose([trn.ToTensor()])
 
 if args.dataset == 'cifar10':
-    train_data = dset.CIFAR10('~/datasets/cifarpy', train=True, transform=train_transform)
-    test_data = dset.CIFAR10('~/datasets/cifarpy', train=False, transform=test_transform)
+    train_data = dset.CIFAR10('./data/cifar', train=True, transform=train_transform)
+    test_data = dset.CIFAR10('./data/cifar', train=False, transform=test_transform)
     num_classes = 10
 else:
-    train_data = dset.CIFAR100('~/datasets/cifarpy', train=True, transform=train_transform)
-    test_data = dset.CIFAR100('~/datasets/cifarpy', train=False, transform=test_transform)
+    train_data = dset.CIFAR100('./data/cifar', train=True, transform=train_transform)
+    test_data = dset.CIFAR100('./data/cifar', train=False, transform=test_transform)
     num_classes = 100
 
 
@@ -120,7 +120,7 @@ elif args.model == 'resnet18':
       #net = models.resnet18()
       net = timm.create_model("resnet18",pretrained=False)
     net.fc = torch.nn.Linear(512,num_classes)
-  elif args.model == 'convnexttiny':
+elif args.model == 'convnexttiny':
     print('convnexttiny')
     if args.pre:
       #net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)

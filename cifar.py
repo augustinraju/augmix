@@ -324,12 +324,12 @@ def test_c(net, test_data, base_path):
 #         num_workers=args.num_workers,
 #         pin_memory=True)
 
-    test_loss, test_acc = test(net, test_loader)
-    corruption_accs.append(test_acc)
-    print('Pertubation {}\n\tTest Loss {:.3f} | Test Error {:.3f}'.format(
-        corruption, test_loss, 100 - 100. * test_acc))
+#     test_loss, test_acc = test(net, test_loader)
+#     corruption_accs.append(test_acc)
+#     print('Pertubation {}\n\tTest Loss {:.3f} | Test Error {:.3f}'.format(
+#         corruption, test_loss, 100 - 100. * test_acc))
 
-  return np.mean(corruption_accs)
+#   return np.mean(corruption_accs)
 
 
 def main():
