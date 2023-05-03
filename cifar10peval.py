@@ -16,6 +16,13 @@ from models.resnext import resnext29
 from models.densenet import densenet
 from models.allconv import AllConvNet
 
+# import datetime
+# import tensorboardX
+# from tensorboardX import SummaryWriter
+import timm
+
+# log_dir = 'logs/10P/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+# writer = SummaryWriter(log_dir=log_dir)
 
 parser = argparse.ArgumentParser(description='Trains a CIFAR Classifier',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -38,6 +45,19 @@ parser.add_argument('--droprate', default=0.0, type=float, help='dropout probabi
 parser.add_argument('--save', '-s', type=str, default='./snapshots/adv', help='Folder to save checkpoints.')
 parser.add_argument('--load', '-l', type=str, default='./snapshots/augmix', help='Checkpoint path to resume / test.')
 parser.add_argument('--test', '-t', action='store_true', help='Test only flag.')
+
+parser.add_argument('--evaluate',default=False, action='store_true', help='Eval only.')
+parser.add_argument('--pre', default=False, action='store_true', help='testing only.')
+parser.add_argument('--optim',
+                     type=str,
+                     default='SGD',
+                     choices=['SGD','adamw'])
+parser.add_argument('--scheduler',
+                     type=str,
+                     default='lamdalearn',
+                     choices=['lamdalearn','cosineannealing'])
+
+
 # Acceleration
 parser.add_argument('--ngpu', type=int, default=1, help='0 = CPU.')
 parser.add_argument('--prefetch', type=int, default=2, help='Pre-fetching threads.')
@@ -79,13 +99,36 @@ if args.model == 'densenet':
     args.decay = 0.0001
     args.epochs = 200
     net = densenet(num_classes=num_classes)
+    print('densenet')
 elif args.model == 'wrn':
     net = WideResNet(args.layers, num_classes, args.widen_factor, dropRate=args.droprate)
+    print('wrn')
 elif args.model == 'allconv':
     net = AllConvNet(num_classes)
+    print('allconv')
 elif args.model == 'resnext':
     args.epochs = 200
     net = resnext29(num_classes=num_classes)
+    print('resnext')
+elif args.model == 'resnet18':
+    print('resnet18')
+    #ipdb.set_trace()
+    if args.pre:
+      #net = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
+      net = timm.create_model("resnet18",pretrained=True)
+    else:
+      #net = models.resnet18()
+      net = timm.create_model("resnet18",pretrained=False)
+    net.fc = torch.nn.Linear(512,num_classes)
+  elif args.model == 'convnexttiny':
+    print('convnexttiny')
+    if args.pre:
+      #net = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+      net = timm.create_model("convnext_tiny",pretrained=True)
+    else:
+      #net = models.convnext_tiny()
+      net = timm.create_model("convnext_tiny",pretrained=False)
+    net.head.fc = torch.nn.Linear(768,num_classes)
 
 state = {k: v for k, v in args._get_kwargs()}
 print(state)

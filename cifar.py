@@ -309,20 +309,20 @@ def test_c(net, test_data, base_path):
 
   return np.mean(corruption_accs)
 
-def test_p(net, test_data, base_path):
-  """Evaluate network on given corrupted dataset."""
-  corruption_accs = []
-  for corruption in CORRUPTIONSP:
-    # Reference to original data is mutated
-    test_data.data = np.load(base_path + corruption + '.npy')
-    test_data.targets = torch.LongTensor(np.load(base_path + 'labels.npy'))
+# def test_p(net, test_data, base_path):
+#   """Evaluate network on given corrupted dataset."""
+#   corruption_accs = []
+#   for corruption in CORRUPTIONSP:
+#     # Reference to original data is mutated
+#     test_data.data = np.load(base_path + corruption + '.npy')
+#     test_data.targets = torch.LongTensor(np.load(base_path + 'labels.npy'))
 
-    test_loader = torch.utils.data.DataLoader(
-        test_data,
-        batch_size=args.eval_batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-        pin_memory=True)
+#     test_loader = torch.utils.data.DataLoader(
+#         test_data,
+#         batch_size=args.eval_batch_size,
+#         shuffle=False,
+#         num_workers=args.num_workers,
+#         pin_memory=True)
 
     test_loss, test_acc = test(net, test_loader)
     corruption_accs.append(test_acc)
