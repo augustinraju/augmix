@@ -26,6 +26,7 @@ import argparse
 import shutil
 import os
 import time
+import tarfile
 
 import augmentations
 from models.cifar.allconv import AllConvNet
@@ -490,6 +491,14 @@ def main():
     f.write('epoch,time(s),train_loss,test_loss,test_error(%)\n')
 
   best_acc = 0
+
+  save_path1 = os.path.join(args.save,args.model+'_'+args.optim)
+  if not os.path.exists(save_path1):
+    os.mkdir(save_path1)
+    filepath = os.path.join(args.save,args.model+'_'+args.optim, 'checkpoint.pth.tar')
+    with tarfile.open(filepath, "w") as tar:
+      tar.add("/work/ws-tmp/g058873-cifarjob/augmix/sample.txt")
+
   print('Beginning training from epoch:', start_epoch + 1)
   for epoch in range(start_epoch, args.epochs):
     begin_time = time.time()
